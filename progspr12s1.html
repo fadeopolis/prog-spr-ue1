@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+               "http://www.w3.org/TR/html4/strict.dtd">
+<HTML lang="de">
+<HEAD>
+  <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <LINK href="http://www.complang.tuwien.ac.at/complang.css" rel="stylesheet" type="text/css">
+  <LINK href="http://www.complang.tuwien.ac.at/favicon.ico" rel="shortcut icon" type="image/x-icon">
+  <LINK href="http://www.complang.tuwien.ac.at/franz/" rel="Start" type="text/html">
+  <TITLE>1. &Uuml;bungsaufgabe - Programmiersprachen, 2012&nbsp;S</TITLE>
+  <!--muh-->
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script src="https://www.informatik.tuwien.ac.at/schluesseltechnologie-assets/pageflip.js" type="text/javascript"></script>
+  <script src="https://www.informatik.tuwien.ac.at/schluesseltechnologie-assets/overlay.js" type="text/javascript"></script>
+</HEAD>
+
+<BODY id="top">
+<DIV class="logo">
+<A href="http://www.complang.tuwien.ac.at/" title="Die Complang-Gruppe">
+  <IMG class="logo" alt="Computer Languages" src="http://www.complang.tuwien.ac.at/logo">
+</A>
+</DIV>
+
+<DIV>
+<P class="rightquote">
+  Programmiersprachen<BR>
+   LVA 185.208, VU, 3 Ects, 2012 S
+</P>
+<H1>1. &Uuml;bungsaufgabe</H1>
+<H4>Aufgabe:</H4>
+Entwickeln Sie in einer beliebigen Programmiersprache Ihrer Wahl eine Simulation eines programmierbaren Taschenrechners entsprechend folgenden Spezifikationen und l&ouml;sen Sie damit die weiter unten beschriebene Testaufgabe.
+
+<H4>Eingaben in den Taschenrechner:</H4>
+Eingaben erfolgen in Postfix-Notation (zuerst kommen die Argumente, danach der Operator).
+Die Anzahl der ben&ouml;tigten Argumente h&auml;ngt vom Operator ab.
+Argumente sind ganze Zahlen oder Ausdr&uuml;cke in eckigen Klammern.
+Zum Beispiel ist <Q>1 2+</Q> eine Anwendung des Operators <Q>+</Q> auf 1 und 2, die als Ergebnis 3 liefert.
+Der Ausdruck <Q>1 2 3 4+*-</Q> wird zu 1-(2*(3+4)) = -13 ausgewertet:
+Der erste Operator addiert die direkt davor stehenden Argumente 3 und 4 zu 7, der Operator <Q>*</Q> wird auf die nach der Addition direkt davor stehenden Argumente 2 und 7 angewandt, und schlie&szlig;lich <Q>-</Q> auf 1 und 14.
+<P>
+Neben Zahlen sind auch Zeichen als Daten verwendbar (am besten als ASCII-Zeichen, aber andere Codierungen sind ebenso erlaubt).
+So stehen <q>a</q> und <q>b</q> einfach nur f&uuml;r die entsprechenden Zeichen, und <q>\n</q> steht f&uuml;r Newline, <q>\t</q> f&uuml;r den Tabulator und so weiter.
+Durch Voranstellen von <q>\</q> verlieren Operatoren, eckige Klammern (siehe unten) und Ziffern ihre &uuml;blichen Bedeutungen und werden als Zeichen betrachtet.
+Jedoch wird intern nicht zwischen Zahlen und Zeichen unterschieden.
+Beispielsweise sind <q>A</q> und <q>65</q> unterschiedliche externe Darstellungen derselben Zahl.
+<P>
+Ausdr&uuml;cke in eckigen Klammern werden nicht gleich ausgewertet.
+Einige Operatoren verarbeiten geklammerte Ausdr&uuml;cke als Argumente.
+Zum Beispiel wird <Q>[2*]</Q> als Argument des Operators <Q>@</Q> selbst als Operator gesehen, der ein Argument mit 2 multipliziert.
+Der Ausdruck <Q>3[2*]@</Q> wird zu <Q>3 2*</Q> bzw. 6 ausgewertet.
+
+<H4>Architektur:</H4>
+Der Taschenrechner besteht aus folgenden Teilen:
+<DL>
+<DT>Tastatur und Display
+<DD>&Uuml;ber die Tastatur werden Programme und Daten eingegeben.
+  Das Display zeigt an, was &uuml;ber die Tastatur eingetippt bzw. vom Programm ausgegeben wird.
+<DT>Stack
+<DD>Ausdr&uuml;cke in Postfix-Notation k&ouml;nnen mit Hilfe eines Stacks einfach berechnet werden:
+  Jedes Argument wird als neuer Eintrag am Top-of-Stack abgelegt.
+  Die Ausf&uuml;hrung eines Operators nimmt die ben&ouml;tigte Anzahl von Argumenten vom Stack und legt Ergebnisse auf den Stack.
+<DT>Eingabeliste
+<DD>Sie enth&auml;lt die noch nicht abgearbeiteten Eingaben.
+  Alle Eingaben werden zeichenweise in der Reihenfolge in dieser Liste abgearbeitet.
+  Neben direkten Eingaben &uuml;ber die Tastatur des Taschenrechners werden auch durch den Operator <Q>@</Q> Eingaben in diese Liste geschrieben.
+</DL>
+<P>
+Zur Vereinfachung k&ouml;nnen f&uuml;r den Stack, die Eingabeliste, geklammerte Ausdr&uuml;cke, Zahlen, etc. (vern&uuml;nftig gew&auml;hlte) Maximalgr&ouml;&szlig;en festgelegt werden, bei deren &Uuml;berschreitung eine Fehlermeldung ausgegeben wird.
+Nach einer Fehlermeldung kann die Programmausf&uuml;hrung abgebrochen werden.
+
+<H4>Operationen:</H4>
+Die Bedeutung folgender Eingaben ist vordefiniert:
+<DL>
+<DT>Spezielle Zeichen <Q>\...</Q>:
+<DD>Der ASCII-Code (bzw. der Code in der entsprechenden Codierung) des auf <Q>\</Q> folgenden Zeichens wird auf den Stack gelegt.
+  F&uuml;r <Q>\n</Q>, <Q>\t</Q>, etc. wird jedoch der Code f&uuml;r Newline, Tabulator, etc. auf den Stack gelegt.
+<DT>Ziffern <Q>0</Q> bis <Q>9</Q>:
+<DD>Alle direkt hintereinander stehenden Ziffern in der Eingabeliste werden zu einer Zahl zusammengesetzt, die als neuer Eintrag auf den Stack gelegt wird.
+<DT><Q>[</Q> und <Q>]</Q>:
+<DD>Die &ouml;ffnende Klammer bewirkt, dass alle folgenden Eingaben bis zur entsprechenden schlie&szlig;enden Klammer als Einheit betrachtet werden, die (beispielsweise in Form eines Strings) als neuer Eintrag auf den Stack gelegt wird.
+  Klammern k&ouml;nnen geschachtelt sein.
+<DT>White-Space (Leerzeichen, Tabulator, Newline, Return ohne <Q>\</Q> davor):
+<DD>Diese Eingaben sind zur Trennung zweier Zahlen sinnvoll, haben sonst aber keine Bedeutung und werden ignoriert.
+<DT>Arithmetische Operatoren und Vergleichsoperatoren (<Q>+</Q>, <Q>-</Q>, <Q>*</Q>, <Q>/</Q>, <Q>%</Q>, <Q>&amp;</Q>, <Q>|</Q>, <Q>=</Q>, <Q>&lt;</Q>, <Q>&gt;</Q>):
+<DD>Diese zweistelligen Operatoren entsprechen den Grundrechnungen (mit <Q>%</Q> zur Berechnung des Divisionsrestes) und einfachen Vergleichen, wobei &amp; bzw. | das logische UND bzw. ODER darstellen.
+  Diese Operatoren nehmen die zwei obersten Elemente vom Stack und legen das Ergebnis auf den Stack.
+  Wenn ein Argument keine Zahl sondern ein geklammerter Ausdruck ist, soll ein Fehler gemeldet werden, ebenso wenn ein Argument von &amp; bzw. | kein Wahrheitswert (0 steht f&uuml;r <q>wahr</q> und 1 f&uuml;r <q>falsch</q>) ist.
+  Ausgenommen hiervon ist nur <Q>=</Q>:
+  Wenn <Q>=</Q> auf zwei gleiche geklammerte Ausdr&uuml;cke oder zwei gleiche Zahlen angewandt wird, soll als Ergebnis 0 (wahr) zur&uuml;ckgegeben werden, sonst 1 (falsch).
+  Bei nichtassoziativen Operationen ist auf die Reihenfolge der Argumente zu achten:
+  <Q>4 2-</Q> und <Q>4 2/</Q> und <Q>2 4%</Q> sollen jeweils 2 ergeben, und <Q>4 2&gt;</Q> und <Q>2 4&lt;</Q> sollen <Q>wahr</Q> liefern.
+  Ein Fehler soll gemeldet werden, wenn das zweite Argument von / oder % gleich 0 ist.
+<DT>Vorzeichen&uuml;mkehr <Q>~</Q>:
+<DD>ist nur auf Zahlen definiert.
+<DT>Kopieren <Q>!</Q>:
+<DD>ersetzt das oberste Element n am Stack durch eine Kopie des n-ten Elements am Stack (vom Top-of-Stack aus gez&auml;hlt).
+  Eine Fehlermeldung wird ausgegeben, wenn n keine positive Zahl ist oder der Stack nicht ausreichend viele Elemente enth&auml;lt.
+<DT>L&ouml;schen <Q>#</Q>:
+<DD>nimmt das oberste Element n vom Stack und entfernt zus&auml;tzlich das n-te Element vom Stack.
+  Eine Fehlermeldung wird ausgegeben, wenn n keine positive Zahl ist oder der Stack nicht ausreichend viele Elemente enth&auml;lt.
+<DT>Anwenden <Q>@</Q>:
+<DD>nimmt das oberste Element vom Stack.
+  Ist das Argument ein geklammerter Ausdruck, dann wird dieser (mit den umschlie&szlig;enden Klammern durch White-Space ersetzt) an vorderster Stelle in die Eingabeliste geschrieben, damit die darin enthaltenen Eingaben als n&auml;chste abgearbeitet werden.
+  Ist das Argument eine Zahl, dann hat <Q>@</Q> keinerlei Auswirkung; das Argument wird wieder unver&auml;ndert auf den Stack gelegt.
+<DT>Textausgabe <Q>"</Q>:
+<DD>nimmt das oberste Element vom Stack und gibt es im Display aus.
+  Falls das Element eine Zahl ist, die ein Zeichen representiert, dann wird das Zeichen ausgegeben.
+  Wenn die Zahl kein Zeichen darstellt, kommt es zu einer Fehlermeldung.
+  Falls das Element ein geklammerter Ausdruck ist, wird dieser Ausdruck ohne umschlie&szlig;ende Klammern ausgegeben.
+<DT>Zahlenausgabe <Q>'</Q>:
+<DD>nimmt das oberste Element vom Stack und gibt es im Display aus.
+  Falls das Element eine Zahl ist, dann wird diese Zahl als Ziffernfolge (eventuell mit vorangestelltem Vorzeichen) ausgegeben.
+  Falls es ein geklammerter Ausdruck ist, wird der Ausdruck zusammen mit den umschlie&szlig;enden Klammern ausgegeben.
+<DT>Einlesen <Q>?</Q>:
+<DD>unterbricht den normalen Eingabemodus (in dem Eingaben &uuml;ber die Tastatur in die Eingabeliste kommen) und startet den Einlesemodus, in dem Eingaben &uuml;ber die Tastatur in einem neuen geklammerten Ausdruck abgelegt werden.
+  Der Einlesemodus endet durch Eintippen von Enter bzw.\ Return.
+  Alle weiteren Eingaben kommen danach wieder in die Eingabeliste.
+  Der im Einlesemodus erzeugte geklammerte Ausdruck wird (nach Hinzuf&uuml;gen umschlie&szlig;ender eckiger Klammern) auf den Stack gelegt.
+</DL>
+
+<H4>Beispiele:</H4>
+Einige Beispiele sollen die Verwendung der Operatoren verdeutlichen.
+Wir beschreiben einen Zustand des Taschenrechners durch den Stackinhalt (links vom Zeichen <Q>^</Q>, Top-of-Stack direkt neben <Q>^</Q>, Eintr&auml;ge durch Leerzeichen getrennt) und die Eingabeliste (rechts von <Q>^</Q>, n&auml;chstes zu verarbeitendes Zeichen direkt neben <Q>^</Q>).
+Pfeile zwischen solchen Zustandsbeschreibungen zeigen Zustands&auml;nderungen durch Ausf&uuml;hrung von Operationen an.
+<P>
+Das erste Beispiel zeigt eine bedingte Anweisung:
+Auf dem Stack wird 0 (wahr) oder 1 (falsch) erwartet.
+Abh&auml;ngig davon soll der eine oder andere geklammerte Ausdruck ausgewertet werden.
+Wir legen zuerst den Ausdruck f&uuml;r den wahr-Zweig <Q>[9]</Q> und dann den f&uuml;r den falsch-Zweig <Q>[9~]</Q> auf den Stack und f&uuml;hren einen Ausdruck <Q>[4!5#2+#@]</Q> aus, der die eigentliche bedingte Anweisung darstellt.
+Die folgenden Abarbeitungsschritte zeigen, was passiert, wenn am Stack zuvor 0 gelegen ist:
+<PRE>
+    0 ^[9][9~][4!5#2+#@]@
+--> 0 [9] ^[9~][4!5#2+#@]@
+--> 0 [9] [9~] ^[4!5#2+#@]@
+--> 0 [9] [9~] [4!5#2+#@] ^@
+--> 0 [9] [9~] ^4!5#2+#@ 
+--> 0 [9] [9~] 4 ^!5#2+#@ 
+--> 0 [9] [9~] 0 ^5#2+#@ 
+--> 0 [9] [9~] 0 5 ^#2+#@ 
+--> [9] [9~] 0 ^2+#@ 
+--> [9] [9~] 0 2 ^+#@ 
+--> [9] [9~] 2 ^#@ 
+--> [9] ^@ 
+--> ^ 9  
+--> 9 ^
+</PRE>
+<P>
+Das n&auml;chste Beispiel zeigt anhand der Berechnung von 3 Faktorielle, wie man rekursive Routinen realisieren kann.
+Zur Vereinfachung k&uuml;rzen wir den Ausdruck [3!3!1-2!1=[]5!C@3#*] durch A ab, wobei C f&uuml;r den Ausdruck [4!5#2+#@] aus dem vorigen Beispiel steht.
+Beachten Sie, dass A und C hier nur zur Vereinfachung der Lesbarkeit dient.
+Im Taschenrechner sollte statt A und C jeweils der entsprechende geklammerte Ausdruck vorkommen.
+<PRE>
+    3 ^A3!4#3!@3#
+--> 3 A ^3!4#3!@3#
+--> 3 A 3 ^!4#3!@3#
+--> 3 A 3 ^4#3!@3#
+--> 3 A 3 4 ^#3!@3#
+--> A 3 ^3!@3#
+--> A 3 3 ^!@3#
+--> A 3 A ^@3#
+--> A 3 ^ 3!3!1-2!1=[]5!C@3#* 3#
+--> A 3 3 ^!3!1-2!1=[]5!C@3#* 3#
+--> A 3 A ^3!1-2!1=[]5!C@3#* 3#
+--> A 3 A 3 ^!1-2!1=[]5!C@3#* 3#
+--> A 3 A 3 ^1-2!1=[]5!C@3#* 3#
+--> A 3 A 3 1 ^-2!1=[]5!C@3#* 3#
+--> A 3 A 2 ^2!1=[]5!C@3#* 3#
+--> A 3 A 2 2 ^!1=[]5!C@3#* 3#
+--> A 3 A 2 2 ^1=[]5!C@3#* 3#
+--> A 3 A 2 2 1 ^=[]5!C@3#* 3#
+--> A 3 A 2 1 ^[]5!C@3#* 3#
+--> A 3 A 2 1 [] ^5!C@3#* 3#
+--> A 3 A 2 1 [] 5 ^!C@3#* 3#
+--> A 3 A 2 1 [] A ^C@3#* 3#
+--> A 3 A 2 1 [] A C ^@3#* 3#
+...
+--> A 3 A 2 A ^@ 3#* 3#
+--> A 3 A 2 ^ 3!3!1-2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 3 ^!3!1-2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A ^3!1-2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 3 ^!1-2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 2 ^1-2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 2 1 ^-2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 ^2!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 2 ^!1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 1 ^1=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 1 1 ^=[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 0 ^[]5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 0 [] ^5!C@3#* 3#* 3#
+--> A 3 A 2 A 1 0 [] 5 ^!C@3#* 3#* 3#
+--> A 3 A 2 A 1 0 [] A ^C@3#* 3#* 3#
+--> A 3 A 2 A 1 0 [] A C ^@3#* 3#* 3#
+...
+--> A 3 A 2 A 1 [] ^@ 3#* 3#* 3#
+--> A 3 A 2 A 1 ^ 3#* 3#* 3#
+--> A 3 A 2 A 1 3 ^#* 3#* 3#
+--> A 3 A 2 1 ^* 3#* 3#
+--> A 3 A 2 ^ 3#* 3#
+--> A 3 A 2 3 ^#* 3#
+--> A 3 2 ^* 3#
+--> A 6 ^ 3#
+--> A 6 3 ^#
+--> 6 ^
+</PRE>
+<p>
+Die Ein- und Ausgabe sollte keine allzugro&szlig;en Schwierigkeiten bereiten.
+Beispielsweise soll der Ausdruck [\n"E"i"n"g"a"b"e":"\&nbsp;"?@'] zun&auml;chst in einer neuen Zeile am Display <q>Eingabe: </q> anzeigen, auf eine Eingabe warten, den eingelesenen Ausdruck ausf&uuml;hren und schlie&szlig;lich das Ergebnis (oberstes Stackelement) ausgeben.
+Der Ausdruck [[\nEingabe:\&nbsp;]"?@'] sollte genau dasselbe machen.
+
+<H4>Testaufgabe:</H4>
+Diese Testaufgabe ist unbedingt durchzuf&uuml;hren:
+Entwerfen Sie (zum Testen des Taschenrechners) einen m&ouml;glichst kurzen und effizienten Ausdruck der entscheidet, ob eine &uuml;ber die Tastatur eingelesene Zahl eine Primzahl ist oder nicht und das Ergebnis in lesbarer Form am Display ausgibt.
+Testen Sie mit mehreren, auch gr&ouml;&szlig;eren Zahlen (bis zu 1000).
+<p>
+Praktischer Hinweis: Zum Programmieren bzw. Starten des Taschenrechners sind lange und komplizierte Ausdr&uuml;cke einzugeben.
+Am einfachsten ist dies zu erledigen, wenn als Display und zur Eingabe eine einfache Textkonsole verwendet wird.
+Dann kann man Programme rasch durch Copy-and-Paste eingeben.
+
+<H4>Zusatzaufgaben f&uuml;r Interessierte:</H4>
+Es stellt sich die Frage, ob man mit diesem Taschenrechner wirklich alles Programmieren kann.
+Ist es m&ouml;glich, damit eine Turing-Maschine zu bauen?
+Die L&ouml;sung dieser Zusatzaufgaben ist nicht verpflichtend und hat keinen Einflu&szlig; auf die Beurteilung.
+</DIV>
+
+<DIV class="leftmenu">
+<DL class="leftbuttons">
+  <DT><A href="http://www.complang.tuwien.ac.at/" title="Die Complang-Gruppe">Complang</A>
+  <DT><A href="http://www.complang.tuwien.ac.at/franz/" title="Franz Puntigam - TU Wien, Complang-Gruppe">Puntigam</A>
+  <DT>&nbsp;&nbsp;&nbsp;<A href="ueber" title="&Uuml;ber Franz Puntigam">&Uuml;ber&nbsp;mich</A>
+  <DT>&nbsp;&nbsp;&nbsp;<A href="research" title="Research of Franz Puntigam">Research</A>
+  <DT>&nbsp;&nbsp;&nbsp;<A href="lehre" title="Lehrangebot von Franz Puntigam">Lehre</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="lehre12w" title="Puntigams Lehrangebot im Wintersemester 2012/2013">LVAs&nbsp;2012&nbsp;W</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="lehre12s" title="Puntigams Lehrangebot im Sommersemester 2012">LVAs&nbsp;2012&nbsp;S</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="pk12s" title="LVA 185.A02: Grundlagen der Programmkonstruktion &ndash; 2012&nbsp;S">PK</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="foop12s" title="LVA 185.211: Fortgeschrittene objektorientierte Programmierung &ndash; 2012&nbsp;S">FOOP</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="progspr12s" title="LVA 185.208: Programmiersprachen &ndash; 2012&nbsp;S">Prog.spr.</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<STRONG title="Kurzbezeichnung der aktuellen Seite">1.&nbsp;Aufgabe</STRONG>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="progspr12s2" title="2. &Uuml;bungsaufgabe - Programmiersprachen, 2012&nbsp;S">2.&nbsp;Aufgabe</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="progspr12s3" title="3. &Uuml;bungsaufgabe - Programmiersprachen, 2012&nbsp;S">3.&nbsp;Aufgabe</A>
+  <DT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="lehre_alt" title="Puntigams Lehrangebot aus fr&uuml;heren Semestern">fr&uuml;here&nbsp;Lehre</A>
+  <DT>&nbsp;&nbsp;&nbsp;<A href="links" title="Links">Links</A>
+</DL>
+</DIV>
+
+<DIV class="rightmenu">
+<DL class="rightbuttons">
+  <DT><A href="sitemap" title="&Uuml;berblick &uuml;ber die Seiten">Sitemap</A>
+  <DT><A href="kontakt" title="Kontakt zu Franz Puntigam">Kontakt</A>
+  <DT class="header">Schnellzugriff:
+  <DT><A href="progspr12s2" title="2. &Uuml;bungsaufgabe - Programmiersprachen, 2012&nbsp;S">n&auml;chste&nbsp;Aufgabe</A>
+</DL>
+</DIV>
+
+<DIV class="fi">
+<A href="http://www.informatik.tuwien.ac.at/" title="Fakult&auml;t f&uuml;r Informatik">
+  <IMG class="fi" alt="Fakult&auml;t f&uuml;r Informatik" src="http://www.complang.tuwien.ac.at/fi">
+</A>
+</DIV>
+
+<DIV class="tu">
+<A href="http://www.tuwien.ac.at/" title="Technische Universit&auml;t Wien">
+  <IMG class="tu" alt="Technische Universit&auml;t Wien" src="http://www.complang.tuwien.ac.at/tu">
+</A>
+</DIV>
+
+<ADDRESS>
+  <A href="#top" title="Anfang dieser Seite">Anfang</A> |
+  <A href="http://validator.w3.org/check/referer" title="&Uuml;berpr&uuml;fung dieser Seite auf syntaktische Korrektheit">HTML 4.01</A> |
+  letzte &Auml;nderung: 2012-05-11 (<A href="http://www.complang.tuwien.ac.at/franz/" title="Verantwortlich f&uuml;r letzte &Auml;nderung">Puntigam</A>)
+</ADDRESS>
+</BODY>
+</HTML>

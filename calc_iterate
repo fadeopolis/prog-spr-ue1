@@ -1,0 +1,17 @@
+
+;; iterate -- iterate function application
+; takes a function f of 1 input and 1 output and an initial input.
+; It applies f to the input, then applies f to the output of that, etc. ad infinitum
+
+;; example:
+
+; a function that prints it input and leaves input+1 on the stack
+[2!1+ 3!4# '\n"] 
+; an initial input 
+0
+; the iterate function
+[[3!@4!@] 4!5# 4!5# 4!@] 
+; apply iterate to its input
+@
+
+

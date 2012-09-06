@@ -1,0 +1,24 @@
+
+;; TO CHECK IF N IS PRIME
+;; RUN IN SHELL: echo N | cat - calc_prime | ./Calc
+
+; tos must be a number at this point
+
+; the actual program
+
+[ ; wrapper for actual prime tester
+	[
+		[2#2#2# [PRIME]"\n"]         ; n <= i, succeed
+		[
+			[1 + 4 ! @]              ; i < n && n % i != 0, recurse
+			[2#2#2# [NOT PRIME]"\n"] ; n % i == 0, fail 
+			5 ! 5 ! % 0 = 2 + # @    ; check if n % i == 0
+		] 
+		5 ! 5 ! > 2 + # @            ; check if n > i
+	]
+	3 ! 4 # 2 4 ! @                  ; push 2 on stack and shuffle argument n to TOS
+]
+
+; apply the program to it's argument
+@
+
